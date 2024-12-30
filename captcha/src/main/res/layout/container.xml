@@ -12,7 +12,7 @@
         android:paddingLeft="10dp"
         android:paddingRight="10dp">
 
-        <com.luozm.captcha.PictureVertifyView
+        <com.luozm.captcha.PictureVerifyView
             android:id="@+id/vertifyView"
             android:layout_width="match_parent"
             android:layout_height="200dp"

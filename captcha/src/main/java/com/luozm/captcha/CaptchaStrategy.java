@@ -33,12 +33,12 @@ public abstract class CaptchaStrategy {
     /**
      * 定义缺块的位置信息
      *
-     * @param width  picture width unit:px
-     * @param height picture height unit:px
+     * @param width     picture width unit:px
+     * @param height    picture height unit:px
      * @param blockSize
      * @return position info of the block
      */
-    public abstract PositionInfo getBlockPostionInfo(int width, int height, int blockSize);
+    public abstract PositionInfo getBlockPositionInfo(int width, int height, int blockSize);
 
     /**
      * 定义滑块图片的位置信息(只有设置为无滑动条模式有用)
@@ -47,8 +47,8 @@ public abstract class CaptchaStrategy {
      * @param height picture height
      * @return position info of the block
      */
-    public PositionInfo getPositionInfoForSwipeBlock(int width, int height, int blockSize){
-        return getBlockPostionInfo(width,height,blockSize);
+    public PositionInfo getPositionInfoForSwipeBlock(int width, int height, int blockSize) {
+        return getBlockPositionInfo(width, height, blockSize);
     }
 
     /**
@@ -64,7 +64,7 @@ public abstract class CaptchaStrategy {
     /**
      * 装饰滑块图片，在绘制图片后执行，即绘制滑块前景
      */
-    public void decoreateSwipeBlockBitmap(Canvas canvas, Path shape) {
+    public void decorationSwipeBlockBitmap(Canvas canvas, Path shape) {
 
     }
 }

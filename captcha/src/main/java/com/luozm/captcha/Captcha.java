@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
-import android.support.annotation.AttrRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.AttrRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,11 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.blankj.utilcode.util.SizeUtils;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+
 /**
  * Created by luozhanming on 2018/1/17.
  */
@@ -27,7 +34,7 @@ import android.widget.TextView;
 public class Captcha extends LinearLayout {
 
     //控件成员
-    private PictureVertifyView vertifyView;         //拼图块
+    private PictureVerifyView verifyView;         //拼图块
     private TextSeekbar seekbar;                    //滑动条块
     private View accessSuccess, accessFailed;       //验证成功/失败显示的视图
     private TextView accessText, accessFailedText;  //验证成功/失败显示的文字
@@ -46,8 +53,6 @@ public class Captcha extends LinearLayout {
     private boolean isDown;
 
     private CaptchaListener mListener;
-
-    private BitmapLoaderTask mTask;
     /**
      * 带滑动条验证模式
      */
@@ -58,37 +63,7 @@ public class Captcha extends LinearLayout {
     public static final int MODE_NONBAR = 2;
 
     @IntDef(value = {MODE_BAR, MODE_NONBAR})
-    public @interface Mode {
-    }
-
-
-    public interface CaptchaListener {
-
-        /**
-         * Called when captcha access.
-         *
-         * @param time cost of access time
-         * @return text to show,show default when return null
-         */
-        String onAccess(long time);
-
-        /**
-         * Called when captcha failed.
-         *
-         * @param failCount fail count
-         * @return text to show,show default when return null
-         */
-        String onFailed(int failCount);
-
-        /**
-         * Called when captcha failed
-         *
-         * @return text to show,show default when return null
-         */
-        String onMaxFailed();
-
-    }
-
+    public @interface Mode {}
 
     public Captcha(@NonNull Context context) {
         super(context);
@@ -106,7 +81,7 @@ public class Captcha extends LinearLayout {
         thumbDrawableId = typedArray.getResourceId(R.styleable.Captcha_thumbDrawable, R.drawable.thumb);
         mMode = typedArray.getInteger(R.styleable.Captcha_mode, MODE_BAR);
         maxFailedCount = typedArray.getInteger(R.styleable.Captcha_max_fail_count, 3);
-        blockSize = typedArray.getDimensionPixelSize(R.styleable.Captcha_blockSize, Utils.dp2px(getContext(), 50));
+        blockSize = typedArray.getDimensionPixelSize(R.styleable.Captcha_blockSize, SizeUtils.dp2px(50));
         typedArray.recycle();
         init();
     }
@@ -114,7 +89,7 @@ public class Captcha extends LinearLayout {
 
     private void init() {
         View parentView = LayoutInflater.from(getContext()).inflate(R.layout.container, this, true);
-        vertifyView = (PictureVertifyView) parentView.findViewById(R.id.vertifyView);
+        verifyView = (PictureVerifyView) parentView.findViewById(R.id.vertifyView);
         seekbar = (TextSeekbar) parentView.findViewById(R.id.seekbar);
         accessSuccess = parentView.findViewById(R.id.accessRight);
         accessFailed = parentView.findViewById(R.id.accessFailed);
@@ -122,11 +97,11 @@ public class Captcha extends LinearLayout {
         accessFailedText = (TextView) parentView.findViewById(R.id.accessFailedText);
         refreshView = (ImageView) parentView.findViewById(R.id.refresh);
         setMode(mMode);
-        if(drawableId!=-1){
-            vertifyView.setImageResource(drawableId);
+        if (drawableId != -1) {
+            verifyView.setImageResource(drawableId);
         }
         setBlockSize(blockSize);
-        vertifyView.callback(new PictureVertifyView.Callback() {
+        verifyView.callback(new PictureVerifyView.Callback() {
             @Override
             public void onSuccess(long time) {
                 if (mListener != null) {
@@ -144,7 +119,7 @@ public class Captcha extends LinearLayout {
             @Override
             public void onFailed() {
                 seekbar.setEnabled(false);
-                vertifyView.setTouchEnable(false);
+                verifyView.setTouchEnable(false);
                 failCount = failCount > maxFailedCount ? maxFailedCount : failCount + 1;
                 accessFailed.setVisibility(VISIBLE);
                 accessSuccess.setVisibility(GONE);
@@ -180,11 +155,11 @@ public class Captcha extends LinearLayout {
                     } else {
                         isResponse = true;
                         accessFailed.setVisibility(GONE);
-                        vertifyView.down(0);
+                        verifyView.down(0);
                     }
                 }
                 if (isResponse) {
-                    vertifyView.move(progress);
+                    verifyView.move(progress);
                 } else {
                     seekBar.setProgress(0);
                 }
@@ -198,7 +173,7 @@ public class Captcha extends LinearLayout {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 if (isResponse) {
-                    vertifyView.loose();
+                    verifyView.loose();
                 }
             }
         });
@@ -212,29 +187,27 @@ public class Captcha extends LinearLayout {
 
     private void startRefresh(View v) {
         //点击刷新按钮，启动动画
-        v.animate().rotationBy(360).setDuration(500)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
+        v.animate().rotationBy(360).setDuration(500).setInterpolator(new AccelerateDecelerateInterpolator()).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
 
-                    }
+            }
 
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        reset(false);
-                    }
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                reset(false);
+            }
 
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
+            @Override
+            public void onAnimationCancel(Animator animation) {
 
-                    }
+            }
 
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
+            @Override
+            public void onAnimationRepeat(Animator animation) {
 
-                    }
-                });
+            }
+        });
     }
 
 
@@ -244,7 +217,7 @@ public class Captcha extends LinearLayout {
 
     public void setCaptchaStrategy(CaptchaStrategy strategy) {
         if (strategy != null) {
-            vertifyView.setCaptchaStrategy(strategy);
+            verifyView.setCaptchaStrategy(strategy);
         }
     }
 
@@ -258,7 +231,7 @@ public class Captcha extends LinearLayout {
      * 设置滑块图片大小，单位px
      */
     public void setBlockSize(int blockSize) {
-        vertifyView.setBlockSize(blockSize);
+        verifyView.setBlockSize(blockSize);
     }
 
     /**
@@ -266,10 +239,10 @@ public class Captcha extends LinearLayout {
      */
     public void setMode(@Mode int mode) {
         this.mMode = mode;
-        vertifyView.setMode(mode);
+        verifyView.setMode(mode);
         if (mMode == MODE_NONBAR) {
             seekbar.setVisibility(GONE);
-            vertifyView.setTouchEnable(true);
+            verifyView.setTouchEnable(true);
         } else {
             seekbar.setVisibility(VISIBLE);
             seekbar.setEnabled(true);
@@ -290,41 +263,44 @@ public class Captcha extends LinearLayout {
     }
 
 
-    public void setBitmap(int drawableId) {
+    public void setBackgroundImage(int drawableId) {
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), drawableId);
-        setBitmap(bitmap);
+        setBackgroundImage(bitmap);
     }
 
-    public void setBitmap(Bitmap bitmap) {
-        vertifyView.setImageBitmap(bitmap);
+    public void setBackgroundImage(Bitmap bitmap) {
+        verifyView.setImageBitmap(bitmap);
         reset(false);
     }
 
-    public void setBitmap(String url) {
-        mTask = new BitmapLoaderTask(new BitmapLoaderTask.Callback() {
+    public void setBackgroundImage(String url) {
+        Glide.with(getContext()).asBitmap().load(url).into(new CustomTarget<Bitmap>() {
             @Override
-            public void result(Bitmap bitmap) {
-                setBitmap(bitmap);
+            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                setBackgroundImage(resource);
+            }
+
+            @Override
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+
             }
         });
-        mTask.execute(url);
+
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        if(mTask!=null&&mTask.getStatus().equals(AsyncTask.Status.RUNNING)){
-            mTask.cancel(true);
-        }
         super.onDetachedFromWindow();
     }
 
     /**
      * 复位
+     *
      * @param clearFailed 是否清除失败次数
      */
     public void reset(boolean clearFailed) {
         hideText();
-        vertifyView.reset();
+        verifyView.reset();
         if (clearFailed) {
             failCount = 0;
         }
@@ -332,17 +308,44 @@ public class Captcha extends LinearLayout {
             seekbar.setEnabled(true);
             seekbar.setProgress(0);
         } else {
-            vertifyView.setTouchEnable(true);
+            verifyView.setTouchEnable(true);
         }
     }
-    
+
     /**
      * 隐藏成功失败文字显示
-     * */
+     */
     public void hideText() {
         accessFailed.setVisibility(GONE);
         accessSuccess.setVisibility(GONE);
     }
 
+
+    public interface CaptchaListener {
+
+        /**
+         * Called when captcha access.
+         *
+         * @param time cost of access time
+         * @return text to show,show default when return null
+         */
+        String onAccess(long time);
+
+        /**
+         * Called when captcha failed.
+         *
+         * @param failCount fail count
+         * @return text to show,show default when return null
+         */
+        String onFailed(int failCount);
+
+        /**
+         * Called when captcha failed
+         *
+         * @return text to show,show default when return null
+         */
+        String onMaxFailed();
+
+    }
 
 }

@@ -6,11 +6,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 
+import com.blankj.utilcode.util.SizeUtils;
+
 /**
  * Created by luozhanming on 2018/1/17.
  */
 
-class TextSeekbar extends android.support.v7.widget.AppCompatSeekBar {
+class TextSeekbar extends androidx.appcompat.widget.AppCompatSeekBar {
 
 
     private Paint textPaint;
@@ -27,7 +29,7 @@ class TextSeekbar extends android.support.v7.widget.AppCompatSeekBar {
         super(context, attrs, defStyleAttr);
         textPaint = new Paint();
         textPaint.setTextAlign(Paint.Align.CENTER);
-        int textSize = Utils.dp2px(context, 14);
+        int textSize = SizeUtils.dp2px(14);
         textPaint.setTextSize(textSize);
         textPaint.setAntiAlias(true);
         textPaint.setColor(Color.parseColor("#545454"));

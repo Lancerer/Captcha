@@ -1,13 +1,12 @@
 package com.luozm.captcha;
 
 import android.content.Context;
-import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.Random;
 
@@ -43,7 +42,7 @@ public class DefaultCaptchaStrategy extends CaptchaStrategy {
     }
 
     @Override
-    public  @NonNull PositionInfo getBlockPostionInfo(int width, int height, int blockSize) {
+    public  @NonNull PositionInfo getBlockPositionInfo(int width, int height, int blockSize) {
         Random random = new Random();
         int left = random.nextInt(width - blockSize +1);
         //Avoid robot frequently and quickly click the start point to access the captcha.
@@ -51,9 +50,6 @@ public class DefaultCaptchaStrategy extends CaptchaStrategy {
             left = blockSize;
         }
         int top = random.nextInt(height - blockSize +1);
-        if (top < 0) {
-            top = 0;
-        }
         return new PositionInfo(left, top);
     }
 
@@ -62,9 +58,6 @@ public class DefaultCaptchaStrategy extends CaptchaStrategy {
         Random random = new Random();
         int left = random.nextInt(width - blockSize+1);
         int top = random.nextInt(height - blockSize+1);
-        if (top < 0) {
-            top = 0;
-        }
         return new PositionInfo(left, top);
     }
 
@@ -78,13 +71,12 @@ public class DefaultCaptchaStrategy extends CaptchaStrategy {
 
     @Override
     public Paint getBlockBitmapPaint() {
-        Paint paint = new Paint();
-        return paint;
+        return new Paint();
     }
 
 
     @Override
-    public void decoreateSwipeBlockBitmap(Canvas canvas, Path shape) {
+    public void decorationSwipeBlockBitmap(Canvas canvas, Path shape) {
         Paint paint = new Paint();
         paint.setColor(Color.parseColor("#FFFFFF"));
         paint.setStyle(Paint.Style.STROKE);

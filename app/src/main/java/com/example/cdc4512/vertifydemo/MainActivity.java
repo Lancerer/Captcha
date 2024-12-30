@@ -1,8 +1,8 @@
 package com.example.cdc4512.vertifydemo;
 
 import android.os.Bundle;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -19,8 +19,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        captcha = (Captcha) findViewById(R.id.captCha);
-        btnMode = (Button) findViewById(R.id.btn_mode);
+        captcha = findViewById(R.id.captCha);
+        btnMode = findViewById(R.id.btn_mode);
         btnMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -59,9 +59,9 @@ public class MainActivity extends AppCompatActivity {
     boolean isCat = true;
     public void changePicture(View view){
         if(isCat){
-            captcha.setBitmap("http://img4.imgtn.bdimg.com/it/u=2091068830,1003707060&fm=200&gp=0.jpg");
+            captcha.setBackgroundImage("https://img0.baidu.com/it/u=1239330420,2967238780&fm=253&fmt=auto&app=120&f=JPEG?w=1422&h=800");
         }else{
-            captcha.setBitmap(R.mipmap.cat);
+            captcha.setBackgroundImage(R.mipmap.cat);
         }
         isCat=!isCat;
     }

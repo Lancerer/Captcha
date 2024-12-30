@@ -1,14 +1,14 @@
 package com.luozm.captcha;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.AppCompatImageView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,7 +19,7 @@ import android.view.View;
  * Created by luozhanming on 2018/1/17.
  */
 
-class PictureVertifyView extends AppCompatImageView {
+class PictureVerifyView extends AppCompatImageView {
 
     //状态码
     private static final int STATE_DOWN = 1;
@@ -61,18 +61,18 @@ class PictureVertifyView extends AppCompatImageView {
     }
 
 
-    public PictureVertifyView(Context context) {
+    public PictureVerifyView(Context context) {
         this(context, null);
     }
 
-    public PictureVertifyView(Context context, @Nullable AttributeSet attrs) {
+    public PictureVerifyView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
 
     }
 
-    public PictureVertifyView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public PictureVerifyView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mStrategy = new DefaultCaptchaStrategy(context);
+        mStrategy = new CircleCaptchaStrategy(context);
         shadowPaint = mStrategy.getBlockShadowPaint();
         bitmapPaint = mStrategy.getBlockBitmapPaint();
         setLayerType(View.LAYER_TYPE_SOFTWARE, bitmapPaint);
@@ -80,7 +80,7 @@ class PictureVertifyView extends AppCompatImageView {
 
     private void initDrawElements(){
         if (shadowInfo == null) {
-            shadowInfo = mStrategy.getBlockPostionInfo(getWidth(), getHeight(), blockSize);
+            shadowInfo = mStrategy.getBlockPositionInfo(getWidth(), getHeight(), blockSize);
             if (mMode == Captcha.MODE_BAR) {
                 blockInfo = new PositionInfo(0, shadowInfo.top);
             } else {
@@ -231,7 +231,7 @@ class PictureVertifyView extends AppCompatImageView {
         getDrawable().setBounds(0, 0, getWidth(), getHeight());
         canvas.clipPath(blockShape);
         getDrawable().draw(canvas);
-        mStrategy.decoreateSwipeBlockBitmap(canvas, blockShape);
+        mStrategy.decorationSwipeBlockBitmap(canvas, blockShape);
         return cropBitmap(tempBitmap);
     }
 
@@ -277,6 +277,7 @@ class PictureVertifyView extends AppCompatImageView {
         return super.dispatchTouchEvent(event);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (mMode == Captcha.MODE_NONBAR && verfityBlock != null && mTouchEnable) {
